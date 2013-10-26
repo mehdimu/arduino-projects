@@ -1,55 +1,102 @@
-/*
-    A complete OS with GO schedule display and current weather.
- */
 
-// include the library code:
 #include <LiquidCrystal.h>
 
-// initialize the library with the numbers of the interface pins
-// select the pins used on the LCD panel
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
+char data;
+char flag = 'N';
+int count;
+
 void setup() {
-  //set-up the serial connection
-  Serial.begin(9600);
+  // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
+  // Print a message to the LCD.
+  lcd.print("Ali's Clock!");
+  Serial.begin(9600);
   lcd.clear();
+//  lcd.setCursor(0, 0);
+//  lcd.print("T: ");
+//  //Temp
+//  lcd.setCursor(3, 0);
+//  lcd.print("+14");
+//  lcd.setCursor(7, 0);
+//  lcd.print("F: ");
+//  //Feels like
+//  lcd.setCursor(10, 0);
+//  lcd.print("-14");
+//  
+//  lcd.setCursor(0, 1);
+//  lcd.print("GO: ");
+//  //Milton Time
+//  lcd.setCursor(4, 1);
+//  lcd.print("11:04");
+//  lcd.setCursor(9, 1);
+//  lcd.print("|");
+//  //Union Time
+//  lcd.setCursor(10, 1);
+//  lcd.print("12:05");
+
+  lcd.setCursor(0, 0);
+  lcd.print("T: ");
+  
+  lcd.setCursor(7, 0);
+  lcd.print("F: ");
+  
+  lcd.setCursor(0, 1);
+  lcd.print("GO: ");
+    
 }
+
 
 void loop() {
+  
 
-  if (firstTime == 0){
+    
+    data = Serial.read();
+    
+    if (data == -1) {
+      flag = 'N';  
+    }
+    
+    else {
+      delay(5000);
+      lcd.clear();
       lcd.setCursor(0, 0);
       lcd.print("T: ");
-      firstTime = 1;
-    }
-
-  if (Serial.available() > 0)  {
-    data = Serial.read();
-    if (data == 'W') {
-      //new weather update
+      
+      lcd.setCursor(7, 0);
+      lcd.print("F: ");
+      
+      lcd.setCursor(0, 1);
+      lcd.print("GO: ");
+      
+      lcd.setCursor(3, 0);
+      while (data != '/') {      
+        lcd.print(data);
+        data = Serial.read();
+      }
+      
       data = Serial.read();
-      lcd.setCursor(0, 3);
+      lcd.setCursor(10, 0);
+      while (data != '_') {
+        lcd.print(data);
+        data = Serial.read();
+      }
+      
+      data = Serial.read();
+      lcd.setCursor(4, 1);
+      while (data != '/') {
+        lcd.print(data);      
+        data = Serial.read();
+      }
+      data = Serial.read();
+      lcd.setCursor(11, 1);
       while (data != -1) {
-        lcd.print(data)
+        lcd.print(data);
+        data = Serial.read();   
       }
     }
-
-    if (data == 'S') {
-      // new bus/train schedule
-      data = Serial.read();
-      lcd.setCursor(0, 3);
-      while (data != -1) {
-        lcd.print(data)
-      }
-    }
-
-
-  value = Serial.read();
-  lcd.print(value);
-  }
-  else {
-    firstTime = 0;
-  }
-  delay(1000);
 }
+
+
+

@@ -1,4 +1,4 @@
-#import serial
+import serial
 import time
 import urllib2
 from pywapi import get_weather_from_weather_com
@@ -7,12 +7,8 @@ from pywapi import get_weather_from_weather_com
 TRANSIT_PSEUDO = "<travel_mode>TRANSIT</travel_mode>"
 DEPARTURE_PSEUDO = "<departure_time>"
 #milton departure and union departure respectively
-REQUEST_PSEUDO_1 = "http://maps.googleapis.com/maps/api/directions/xml?\
-						 origin=L9T0J4&destination=M5J1E6&sensor=false&\
-						 departure_time={}&mode=transit"
-REQUEST_PSEUDO_2 = "http://maps.googleapis.com/maps/api/directions/xml?\
-						 origin=M5J1E6&destination=L9T1N8&sensor=false&\
-						 departure_time={}&mode=transit"
+REQUEST_PSEUDO_1 = "http://maps.googleapis.com/maps/api/directions/xml?origin=L9T0J4&destination=M5J1E6&sensor=false&departure_time={}&mode=transit"
+REQUEST_PSEUDO_2 = "http://maps.googleapis.com/maps/api/directions/xml?origin=M5J1E6&destination=L9T1N8&sensor=false&departure_time={}&mode=transit"
 REFRESH_INTERVAL = 60
 SERIAL_NAME = '/dev/ttyS4'
 SERIAL_PORT = 9600
@@ -65,20 +61,29 @@ def formatTime(TIME):
 
 
 if __name__ == '__main__':
-	#initialize the serial connection
-	#ser = serial.Serial(SERIAL_NAME, SERIAL_PORT )
 
 	#declare any variables
 	oldTemp = oldFeel = lastMiltonTime = lastUnionTime = 0;
 
 	while (True):
 
-		#get go schedule
-		departureTime = getTime(REQUEST_PSEUDO_1)
-		miltonTime = formatTime(departureTime)
+		try:
+			ser = serial.Serial(SERIAL_NAME, SERIAL_PORT )
+		except:
+			print 'Serial Error'
+			time.sleep(10)
+			continue
 
-		departureTime = getTime(REQUEST_PSEUDO_2)
-		unionTime = formatTime(departureTime)
+		#get go schedule
+		try:
+			departureTime = getTime(REQUEST_PSEUDO_1)
+			miltonTime = formatTime(departureTime)
+			departureTime = getTime(REQUEST_PSEUDO_2)
+			unionTime = formatTime(departureTime)
+		except:
+			print "Network Error"
+			time.sleep(10)
+			continue
 
 		if miltonTime:
 			print miltonTime
@@ -95,21 +100,28 @@ if __name__ == '__main__':
 		print temp, feel
 
 		#send updated data
-		if (oldTemp != temp or oldFeel != feel):
-			oldTemp = temp
-			oldFeel = feel
-			#tell the lcd that its temperature
-			#dataSent = ser.write(temp)
-			#print dataSent
-			pass
+		try:
+			bytes = ser.write(temp+'/'+feel+'_'+miltonTime+'/'+unionTime)
+		except:
+			print "Device disconnected unexpectedly"
+			break
 
-		if (lastMiltonTime != miltonTime or lastUnionTime != unionTime):
-			lastMiltonTime = miltonTime
-			lastUnionTime = unionTime
-			#tell the lcd that its schedules
-			#dataSent = ser.write(temp)
-			#print dataSent
-			pass
+		print bytes
+		# if (oldTemp != temp or oldFeel != feel):
+		# 	oldTemp = temp
+		# 	oldFeel = feel
+		# 	#tell the lcd that its temperature
+		# 	#dataSent = ser.write(temp)
+		# 	#print dataSent
+		# 	pass
+
+		# if (lastMiltonTime != miltonTime or lastUnionTime != unionTime):
+		# 	lastMiltonTime = miltonTime
+		# 	lastUnionTime = unionTime
+		# 	#tell the lcd that its schedules
+		# 	#dataSent = ser.write(temp)
+		# 	#print dataSent
+		# 	pass
 
 		#refresh interval
 		time.sleep(REFRESH_INTERVAL)
